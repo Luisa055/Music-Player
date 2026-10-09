@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Player - SESI Beats</title>
+  <!-- Ícones do Lucide -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #0b0c16;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    /* Container do Player conforme o estilo */
+    .player-card {
+      background: #1e1e38;
+      border-radius: 28px;
+      padding: 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Capa da Música com Badge de Status */
+    .cover-wrapper {
+      position: relative;
+      width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .cover-image {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(40, 40, 60, 0.75);
+      backdrop-filter: blur(8px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: 0.3px;
+    }
+
+    /* Informações da Música */
+    .track-info {
+      text-align: center;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    .track-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .track-artist {
+      font-size: 15px;
+      color: #8f92b2;
+      font-weight: 500;
+    }
+
+    /* Progresso e Tempo */
+    .progress-container {
+      width: 100%;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .progress-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #7c66ff;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(124, 102, 255, 0.8);
+    }
+
+    .time-info {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #8f92b2;
+      font-weight: 500;
+    }
+
+    /* Controles de Reprodução */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      width: 100%;
+    }
+
+    .btn {
+      background: none;
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .btn:hover {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+
+    .btn-step {
+      color: #d1d3f0;
+    }
+
+    .btn-play {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #6c52ee;
+      box-shadow: 0 8px 25px rgba(108, 82, 238, 0.5);
+    }
+
+    .btn-play:hover {
+      transform: scale(1.08);
+      box-shadow: 0 10px 30px rgba(108, 82, 238, 0.7);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="player-card">
+    <!-- Capa / Logótipo com Badge -->
+    <div class="cover-wrapper">
+      <span class="status-badge" id="status-badge">Pausado</span>
+      <img id="cover-img" class="cover-image" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop" alt="Capa da Música / Logótipo">
+    </div>
+
+    <!-- Título e Artista -->
+    <div class="track-info">
+      <h2 class="track-title" id="track-title">Vibe Sideral</h2>
+      <p class="track-artist" id="track-artist">SESI Beats • Nova Era</p>
+    </div>
+
+    <!-- Barra de Progresso e Tempos -->
+    <div class="progress-container">
+      <input type="range" class="progress-bar" id="seek-bar" value="0" max="100">
+      <div class="time-info">
+        <span id="current-time">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="controls">
+      <button class="btn btn-step" id="btn-prev" aria-label="Anterior">
+        <i data-lucide="skip-back" size="24"></i>
+      </button>
+
+      <button class="btn btn-play" id="btn-play" aria-label="Play/Pause">
+        <i data-lucide="play" id="play-icon" size="28" style="margin-left: 3px;"></i>
+      </button>
+
+      <button class="btn btn-step" id="btn-next" aria-label="Próximo">
+        <i data-lucide="skip-forward" size="24"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tag de áudio oculta -->
+  <audio id="audio-player"></audio>
+
+  <script>
+    // Playlist atualizada
+    const playlist = [
+      {
+        title: "Vibe Sideral",
+        artist: "SESI Beats • Nova Era",
+        cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+      },
+      {
+        title: "Ritmo Urbano",
+        artist: "SESI Beats",
+        cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=800&auto=format&fit=crop",
+        src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
+      }
+    ];
+
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+
+    // Elementos DOM
+    const audio = document.getElementById('audio-player');
+    const playBtn = document.getElementById('btn-play');
+    const playIcon = document.getElementById('play-icon');
+    const prevBtn = document.getElementById('btn-prev');
+    const nextBtn = document.getElementById('btn-next');
+    const seekBar = document.getElementById('seek-bar');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationEl = document.getElementById('duration');
+    const statusBadge = document.getElementById('status-badge');
+    const trackTitle = document.getElementById('track-title');
+    const trackArtist = document.getElementById('track-artist');
+    const coverImg = document.getElementById('cover-img');
+
+    // Carregar música inicial
+    function loadTrack(index) {
+      const track = playlist[index];
+      audio.src = track.src;
+      trackTitle.textContent = track.title;
+      trackArtist.textContent = track.artist;
+      coverImg.src = track.cover;
+      seekBar.value = 0;
+      currentTimeEl.textContent = "0:00";
+    }
+
+    // Alternar Play / Pause
+    function togglePlay() {
+      if (isPlaying) {
+        pauseTrack();
+      } else {
+        playTrack();
+      }
+    }
+
+    function playTrack() {
+      isPlaying = true;
+      audio.play();
+      statusBadge.textContent = "Tocando";
+      playIcon.setAttribute('data-lucide', 'pause');
+      playIcon.style.marginLeft = "0px";
+      lucide.createIcons();
+    }
+
+    function pauseTrack() {
+      isPlaying = false;
+      audio.pause();
+      statusBadge.textContent = "Pausado";
+      playIcon.setAttribute('data-lucide', 'play');
+      playIcon.style.marginLeft = "3px";
+      lucide.createIcons();
+    }
+
+    // Avançar / Retroceder
+    function prevTrack() {
+      currentTrackIndex = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      loadTrack(currentTrackIndex);
+      if (isPlaying) playTrack();
+    }
+
+    function nextTrack() {
+      currentTrackIndex = (currentTrackIndex + 1) % playlist.length;
+      loadTrack(currentTrackIndex);
+      if (isPlaying) playTrack();
+    }
+
+    // Formatar segundos para o formato MM:SS
+    function formatTime(seconds) {
+      if (isNaN(seconds)) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Atualizar progresso do áudio
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        const progressPercent = (audio.currentTime / audio.duration) * 100;
+        seekBar.value = progressPercent;
+        currentTimeEl.textContent = formatTime(audio.currentTime);
+      }
+    });
+
+    // Quando os metadados do áudio forem carregados
+    audio.addEventListener('loadedmetadata', () => {
+      durationEl.textContent = formatTime(audio.duration);
+    });
+
+    // Permitir buscar no progresso
+    seekBar.addEventListener('input', () => {
+      if (audio.duration) {
+        const seekTime = (seekBar.value / 100) * audio.duration;
+        audio.currentTime = seekTime;
+      }
+    });
+
+    // Eventos dos botões
+    playBtn.addEventListener('click', togglePlay);
+    prevBtn.addEventListener('click', prevTrack);
+    nextBtn.addEventListener('click', nextTrack);
+    audio.addEventListener('ended', nextTrack);
+
+    // Inicialização
+    loadTrack(currentTrackIndex);
+    lucide.createIcons();
+  </script>
+</body>
+</html>
